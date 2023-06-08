@@ -47,7 +47,15 @@ async function run() {
     // TODO: have to be remove below line
     await client.connect();
     const usersCollection = client.db("topMusicy").collection("topMusicyUsers");
-  
+
+   // create jwt api
+    app.post('/jwt', (req, res) => { 
+      const user = req.body
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN)
+      res.send({token})
+
+    })
+
     // user related api
     //------------------------------------------------------
     // post users to db
