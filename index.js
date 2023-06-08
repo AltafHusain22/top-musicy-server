@@ -17,12 +17,10 @@ const verifyJWT = (req, res, next) => {
     return res.status(403).send({ error: true, message: "forbidden Access" });
   }
   // bearar token
-  const token = authorization.split(" ")[1];
+  const token = authorization.split(' ')[1];
   jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
     if (err) {
-      return res
-        .status(401)
-        .send({ error: true, message: "unauthorized Access" });
+      return res.status(401).send({ error: true, message: "unauthorized Access" });
     }
     req.decoded = decoded;
     next();
@@ -47,6 +45,7 @@ async function run() {
     // TODO: have to be remove below line
     await client.connect();
     const usersCollection = client.db("topMusicy").collection("topMusicyUsers");
+    const classCollection = client.db("topMusicy").collection("classes");
 
    // create jwt api
     app.post('/jwt', (req, res) => { 
@@ -56,9 +55,9 @@ async function run() {
 
     })
 
-    // user related api
-    //------------------------------------------------------
-    // post users to db
+                 // user related api//
+    //------------------------------------------------------//
+                // post users to db//
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -70,13 +69,13 @@ async function run() {
       res.send(result);
     });
 
-    // get all users
+                 // get all users//
     app.get('/users', async(req, res) => { 
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
 
-    //   set user role to an Admin 
+            //set user role to an Admin// 
     app.patch('/users/admin/:id', async(req, res) => { 
       const id = req.params.id 
       const filter = { _id: new ObjectId(id) }
@@ -89,7 +88,7 @@ async function run() {
       res.send(result)
     })
 
-    //   set user role to an instructor 
+              //set user role to an instructor//
     app.patch('/users/instructor/:id', async(req, res) => { 
       const id = req.params.id 
       const filter = { _id: new ObjectId(id) }
@@ -102,12 +101,45 @@ async function run() {
       res.send(result)
     })
 
-    //   delete a spesific user 
+              //delete a spesific user//
     app.delete('/users/:id', async(req, res) => { 
       const id = req.params.id 
       const filter = { _id: new ObjectId(id) }
       const result = await usersCollection.deleteOne(filter)
       res.send(result)
+    })
+
+            // get a spesific admin api//
+    app.get('/users/admin/:email', verifyJWT, async(req,res) => {
+      const email = req.params.email 
+      if (req.decoded.email !== email){ 
+        res.send({ admin: false })
+      }
+      const query = { email: email }
+      const user = await usersCollection.findOne(query)
+      const result = { admin: user?.role === 'admin' }
+      res.send(result)
+    })
+    
+          // get a spesific instructor api//
+    app.get('/users/instructor/:email', verifyJWT, async(req,res) => {
+      const email = req.params.email 
+      if (req.decoded.email !== email){ 
+        res.send({ instructor: false })
+      }
+      const query = { email: email }
+      const user = await usersCollection.findOne(query)
+      const result = { instructor: user?.role === 'instructor' }
+      res.send(result)
+    })
+
+                     // class related api//
+    //------------------------------------------------------//
+    app.post('/addclass', async(req,res)=> { 
+      const classBody = req.body
+      const result = await classCollection.insertOne(classBody)
+      res.send(result)
+      
     })
 
    
