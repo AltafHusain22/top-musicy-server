@@ -62,13 +62,49 @@ async function run() {
       res.send(result);
     });
 
-   
+    // get all users
+    app.get('/users', async(req, res) => { 
+      const result = await usersCollection.find().toArray()
+      res.send(result)
+    })
 
-	  
-	  
+    //   set user role to an Admin 
+    app.patch('/users/admin/:id', async(req, res) => { 
+      const id = req.params.id 
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          role: 'admin'
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+
+    //   set user role to an instructor 
+    app.patch('/users/instructor/:id', async(req, res) => { 
+      const id = req.params.id 
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          role: 'instructor'
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+
+    //   delete a spesific user 
+    app.delete('/users/:id', async(req, res) => { 
+      const id = req.params.id 
+      const filter = { _id: new ObjectId(id) }
+      const result = await usersCollection.deleteOne(filter)
+      res.send(result)
+    })
+
+   
     // stripe payment related api
     // ------------------------------------------------
-
     // create-payment-intent
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
