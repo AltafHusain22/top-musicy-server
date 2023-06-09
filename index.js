@@ -168,7 +168,7 @@ async function run() {
 
     })
 
-    // class status update 
+    // class status update to approved
     app.patch('/class/:status', async(req, res) => { 
       const status = req.params.status 
       const filter = { status: status};
@@ -180,6 +180,22 @@ async function run() {
       const result = await classCollection.updateOne(filter, updateDoc);
       res.send(result);
     })
+
+    // class status update to denied
+    app.patch('/deny/:deny', async(req, res) => { 
+      const status = req.params.deny 
+      console.log(status)
+      const filter = { status: status};
+      const updateDoc = {
+        $set: {
+          status: "denied",
+        },
+      };
+      const result = await classCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
+
 
     // get top classes
 
