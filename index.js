@@ -168,6 +168,14 @@ async function run() {
 
     })
 
+    // get all approved class 
+    app.get('/approvedclass', async(req, res) => { 
+
+      const query = { status: 'approved' }
+      const result = await classCollection.find(query).toArray()
+      res.send(result)
+    })
+
     // class status update to approved
     app.patch('/class/:status', async(req, res) => { 
       const status = req.params.status 
