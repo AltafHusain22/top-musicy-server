@@ -48,6 +48,7 @@ async function run() {
     await client.connect();
     const usersCollection = client.db("topMusicy").collection("topMusicyUsers");
     const classCollection = client.db("topMusicy").collection("classes");
+    const usersClassCollection = client.db("topMusicy").collection("selectedClasses");
 
     // create jwt api
     app.post("/jwt", (req, res) => {
@@ -203,10 +204,7 @@ async function run() {
       res.send(result);
     })
 
-
-
     // get top classes
-
     app.get("/classes/top", async (req, res) => {
       const result = await classCollection
         .find()
@@ -215,6 +213,14 @@ async function run() {
         .toArray();
       res.send(result);
     });
+
+    // user selected classes
+    app.post('/userselectedclass', async(req, res) => { 
+      const body = req.body;
+      console.log(body)
+      const result = await usersClassCollection.insertOne(body)
+      res.send(result)
+    })
 
     // ...
 
