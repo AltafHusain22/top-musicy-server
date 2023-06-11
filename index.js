@@ -148,8 +148,6 @@ async function run() {
     app.patch("/insertFeedback/:id", async (req, res) => {
       const id = req.params.id;
       const feedback  = req.body;
-      console.log(feedback);
-    
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
@@ -180,6 +178,21 @@ async function run() {
       const result = await classCollection.find(query).toArray();
       res.send(result);
     });
+
+    // update class 
+    app.patch('/myclasses/:id', async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      console.log(body)
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: body,
+      };
+    
+      const result = await classCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    
 
     // class related api//
     //------------------------------------------------------//
