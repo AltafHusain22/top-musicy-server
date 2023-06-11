@@ -5,10 +5,14 @@ require("dotenv").config();
 const cors = require("cors");
 var jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 
 // middleware
 app.use(cors());
 app.use(express.json());
+const bodyParser = require('body-parser');
+// Parse JSON bodies
+app.use(bodyParser.json());
 
 // jwt middleware
 const verifyJWT = (req, res, next) => {
@@ -31,7 +35,8 @@ const verifyJWT = (req, res, next) => {
 
 // mongo db
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.p9nxh9h.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-3omtg6q-shard-00-00.p9nxh9h.mongodb.net:27017,ac-3omtg6q-shard-00-01.p9nxh9h.mongodb.net:27017,ac-3omtg6q-shard-00-02.p9nxh9h.mongodb.net:27017/?ssl=true&replicaSet=atlas-jiv18x-shard-0&authSource=admin&retryWrites=true&w=majority`
+
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -48,6 +53,7 @@ async function run() {
     await client.connect();
     const usersCollection = client.db("topMusicy").collection("topMusicyUsers");
     const classCollection = client.db("topMusicy").collection("classes");
+    const paymentsCollection = client.db("topMusicy").collection("payments");
     const usersClassCollection = client
       .db("topMusicy")
       .collection("selectedClasses");
@@ -136,6 +142,16 @@ async function run() {
     app.post("/addclass", async (req, res) => {
       const classBody = req.body;
       const result = await classCollection.insertOne(classBody);
+      res.send(result);
+    });
+    app.post("/addclass/:id", async (req, res) => {
+      const feedback = req.body.feedback;
+      const classId = req.params.id;
+      const result = await classCollection.updateOne(
+        { _id: ObjectId(classId) },
+        { $set: { feedback: feedback } }
+      );
+    
       res.send(result);
     });
 
@@ -287,11 +303,25 @@ async function run() {
       res.send(result);
     });
 
+    // post payment history to db
+    app.post('/paymenthistory', async(req, res) => { 
+
+      const payment = req.body
+      const result = await paymentsCollection.insertOne(payment)
+      res.send(result)
+
+    })
+    // my enrolled classes
+    app.get('/enrolledclasses', async(req, res) => { 
+
+    } )
+
     // create-payment-intent
-    app.post("/create-payment-intent", async (req, res) => {
+    app.post("/create-payment-intent",verifyJWT, async (req, res) => {
       const { price } = req.body;
+      const amount = price * 100
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: price * 100,
+        amount: price * amount,
         currency: "usd",
         payment_method_types: ["card"],
       });
