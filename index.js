@@ -143,16 +143,24 @@ async function run() {
       const result = await classCollection.insertOne(classBody);
       res.send(result);
     });
-    app.post("/addclass/:id", async (req, res) => {
-      const feedback = req.body.feedback;
-      const classId = req.params.id;
-      const result = await classCollection.updateOne(
-        { _id: ObjectId(classId) },
-        { $set: { feedback: feedback } }
-      );
 
+    // update classcollection by admin feedback
+    app.patch("/insertFeedback/:id", async (req, res) => {
+      const id = req.params.id;
+      const feedback  = req.body;
+      console.log(feedback);
+    
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          feedback: feedback,
+        },
+      };
+    
+      const result = await classCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+    
 
     // get all classess that added by instructor
 
@@ -306,7 +314,7 @@ async function run() {
       res.send(result);
     });
 
-                // payment related api//
+    // payment related api//
     //------------------------------------------------------//
 
     // create-payment-intent
@@ -322,7 +330,7 @@ async function run() {
     });
 
     // post payment history to db
-    app.post("/paymenthistory", async (req, res) => {
+    app.post("/paymenthistory", verifyJWT, async (req, res) => {
       const payment = req.body;
       const result = await paymentsCollection.insertOne(payment);
       res.send(result);
