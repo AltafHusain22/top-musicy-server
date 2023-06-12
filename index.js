@@ -49,7 +49,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // TODO: have to be remove below line when upload to vercel
-    await client.connect();
+    // await client.connect();
     const usersCollection = client.db("topMusicy").collection("topMusicyUsers");
     const classCollection = client.db("topMusicy").collection("classes");
     const paymentsCollection = client.db("topMusicy").collection("payments");
@@ -147,18 +147,17 @@ async function run() {
     // update classcollection by admin feedback
     app.patch("/insertFeedback/:id", async (req, res) => {
       const id = req.params.id;
-      const feedback  = req.body;
+      const feedback = req.body;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
           feedback: feedback,
         },
       };
-    
+
       const result = await classCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    
 
     // get all classess that added by instructor
 
@@ -179,20 +178,19 @@ async function run() {
       res.send(result);
     });
 
-    // update class 
-    app.patch('/myclasses/:id', async (req, res) => {
+    // update class
+    app.patch("/myclasses/:id", async (req, res) => {
       const id = req.params.id;
       const body = req.body;
-      console.log(body)
+      console.log(body);
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: body,
       };
-    
+
       const result = await classCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    
 
     // class related api//
     //------------------------------------------------------//
@@ -315,17 +313,45 @@ async function run() {
     //  delete class by student
     app.delete("/class/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       query = { _id: new ObjectId(id) };
       const result = await usersClassCollection.deleteOne(query);
       res.send(result);
     });
 
-    // my enrolled classes
+    // my enrolled classes and payment history by decending order
     app.get("/enrolledclasses", async (req, res) => {
-      const result = await paymentsCollection.find().toArray();
+      const result = await paymentsCollection.find().sort({ transectionId: -1 }).toArray();
       res.send(result);
     });
+
+    // todo: its not working have to be fix
+    //  update available seat and enrolled api after select
+    app.patch("/update-seat/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+    
+      const filter = { _id: new ObjectId(id) };
+      console.log(filter);
+    
+      try {
+        // Retrieve the class document from the database
+        const classDoc = await classCollection.findOne(filter);
+        // Update the seat and enrolled count
+        const updateDoc = {
+          $set: {
+            seat: classDoc.seat - 1,
+            enrolled: classDoc.enrolled + 1,
+          },
+        };
+    
+        const result = await classCollection.updateOne(filter, updateDoc);
+    
+        res.send(result);
+      } catch (error) {
+        res.status(500).json({ message: "Error updating seat", error });
+      }
+    });
+    
 
     // payment related api//
     //------------------------------------------------------//
@@ -349,6 +375,7 @@ async function run() {
       res.send(result);
     });
 
+  
     // -----------------------------------------------
 
     await client.db("admin").command({ ping: 1 });
